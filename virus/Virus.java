@@ -4,119 +4,241 @@ import java.util.Scanner;
 
 public class Virus {
     public static void main(String[] args) {
-        int[][] map =
-                {{1, 0, 0, 0, 0, 0, 0, 2},
-                {0, 0, 2, 0, 0, 0, 0, 0},
-                {0, 2, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0},
-                {2, 0, 0, 0, 0, 0, 0, 1},};
+        int[][] map = getMap();
+        printMap(map);
+        int turn = 1;
+        int countPlayer1Score = 0;
+        int countPlayer2Score = 0;
 
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[0].length; j++) {
-                System.out.print(map[i][j]);
-            }
-            System.out.println();
-        }
+        Scanner sc = new Scanner(System.in);
         while (true) {
-            int countOfZero = 0;
+            showScores(map, countPlayer1Score, countPlayer2Score);
+            System.out.println("Player " + playerTurn(turn) + " Turn");
 
-            for (int i = 0; i < map.length; i++) {
-                for (int j = 0; j < map[0].length; j++) {
-                    if (map[i][j] == 0) {
-                        countOfZero++;
+            // Get source coordinates of the cell I want to move.
+            System.out.print("Choose X on the map: ");
+            int inputX = sc.nextInt();
+            System.out.print("Choose Y on the  map: ");
+            int inputY = sc.nextInt();
+
+            // Determine player's turn.
+            if(map[inputY][inputX] != playerTurn(turn)) {
+                System.out.println("It's not your turn");
+                continue;
+            }
+
+            // Cell must be owned by either player1 or player2.
+            if (map[inputY][inputX] != 1 && map[inputY][inputX] != 2) {
+                System.out.println("Pick a valid cell!");
+                continue;
+            }
+            int countMove = 0;
+            //Show where can move.
+            for (int i = inputX - 2; i <= inputX + 2; i++) {
+                for (int j = inputY - 2; j <= inputY + 2; j++) {
+                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 0) {
+                        map[j][i] = 5;
+                        countMove++;
                     }
                 }
             }
-            if (countOfZero == 0) {
-                break;
+            //If rock that you choose can't be moved, go back.
+            if(countMove == 0) {
+                System.out.println("You can't move this rock! Choose the other rock");
+                continue;
+            }
+            printMap(map);
+
+            // Erase 5
+            for (int i = inputX - 2; i <= inputX + 2; i++) {
+                for (int j = inputY - 2; j <= inputY + 2; j++) {
+                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 5) {
+                        map[j][i] = 0;
+                    }
+                }
+            }
+
+            // Get destination coordinates of the cell I want to move to.
+            System.out.print("input X which you want to move: ");
+            int outputX = sc.nextInt();
+            System.out.print("input Y which you want to move: ");
+            int outputY = sc.nextInt();
+
+            // Cannot move to a cell that is occupied.
+            if (map[outputY][outputX] == 1 || map[outputY][outputX] == 2) {
+                System.out.println("Invalid location!");
+                continue;
+            }
+
+            // Get the distance a cell is moving.
+            int diff = getCellDiff(inputX, inputY, outputX, outputY);
+            if (diff == 1) {
+                map[outputY][outputX] = map[inputY][inputX];
+            } else if (diff == 2) {
+                map[outputY][outputX] = map[inputY][inputX];
+                map[inputY][inputX] = 0;
             } else {
-                Scanner sc = new Scanner(System.in);
-                System.out.println("Choose 1 or 2 to move");
-                System.out.print("Enter the X coordinate of what you want to move: ");
-                int moveX = sc.nextInt();
-                System.out.print("Enter the Y coordinate of what you want to move: ");
-                int moveY = sc.nextInt();
+                System.out.println("You tried to move too much!");
+                continue;
+            }
 
-                int getType;
-
-                if (map[moveY][moveX] == 0) {
-                    System.out.println("Error!");
+            // Infect surrounding cells after moving to the destination coordinates.
+            for (int i = outputX - 1; i <= outputX + 1; i++) {
+                for (int j = outputY - 1; j <= outputY + 1; j++) {
+                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] != 0) {
+                        map[j][i] = map[outputY][outputX];
+                    }
+                }
+            }
+            turn++;
+            printMap(map);
+            //Count the number of current player's rock.
+            int count = 0;
+            for(int i = 0; i < map.length; i++) {
+                for(int j = 0; j < map[i].length; j++) {
+                    if(map[j][i] == playerTurn(turn)) {
+                        count++;
+                    }
+                }
+            }
+            //Way1: If there is no rock to move, game over.
+            if(count == 0) {
+                System.out.println("Way 1");
+                String play = "PLAY";
+                showScores(map, countPlayer1Score, countPlayer2Score);
+                System.out.println("Game over");
+                winner(countPlayer1Score, countPlayer2Score);
+                System.out.println("If you want to start again, type (PLAY) or If you want to end, type anything: ");
+                String restart = sc.next();
+                if(restart.equalsIgnoreCase(play)) {
+                    map = new int[][]{
+                            {1, 0, 0, 0, 0, 0, 0, 2},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {2, 0, 0, 0, 0, 0, 0, 1}};
+                    printMap(map);
+                    continue;
                 } else {
-                    System.out.print("Enter X: ");
-                    int inputX = sc.nextInt();
-                    System.out.print("Enter Y: ");
-                    int inputY = sc.nextInt();
-
-                    getType = map[moveY][moveX];
-                    if (map[inputY][inputX] == 1 || map[inputY][inputX] == 2) {
-                        System.out.println("Error");
-                    } else {
-                        map[inputY][inputX] = getType;
-                        if(inputX == 0 || inputY == 0) {
-                            if (map[inputY + 1][inputX + 1] != getType && map[inputY + 1][inputX + 1] != 0) {
-                                map[inputY + 1][inputX + 1] = getType;
-                            }
-                            if (map[inputY + 1][inputX] != getType && map[inputY + 1][inputX] != 0) {
-                                map[inputY + 1][inputX] = getType;
-                            }
-                            if (map[inputY][inputX + 1] != getType && map[inputY][inputX + 1] != 0) {
-                                map[inputY][inputX + 1] = getType;
-                            }
-                            if ((inputX - moveX == 1 || inputX - moveX == -1) || (inputY - moveY == 1 || inputY - moveY == -1)) {
-                                map[moveY][moveX] = getType;
-                            } else {
-                                map[moveY][moveY] = 0;
-                            }
-                            for (int i = 0; i < map.length; i++) {
-                                for (int j = 0; j < map[0].length; j++) {
-                                    System.out.print(map[i][j]);
+                    break;
+                }
+            }
+            int countOfZero = 0;
+            //Find the way the player can go.
+            for(int i = 0; i < map.length; i++) {
+                for(int j = 0; j < map[i].length; j++) {
+                    if(map[j][i] == playerTurn(turn)) {
+                        for (int k = i - 2; k <= i + 2; k++) {
+                            for (int l = j - 2; l <= j + 2; l++) {
+                                if (k >= 0 && l >= 0 && k < map.length && l < map.length) {
+                                    if(map[l][k] == 0) {
+                                        countOfZero++;
+                                    }
                                 }
-                                System.out.println();
-                            }
-                        } else {
-                            if (map[inputY + 1][inputX + 1] != getType && map[inputY + 1][inputX + 1] != 0) {
-                                map[inputY + 1][inputX + 1] = getType;
-                            }
-                            if (map[inputY + 1][inputX] != getType && map[inputY + 1][inputX] != 0) {
-                                map[inputY + 1][inputX] = getType;
-                            }
-                            if (map[inputY][inputX + 1] != getType && map[inputY][inputX + 1] != 0) {
-                                map[inputY][inputX + 1] = getType;
-                            }
-                            if (map[inputY + -1][inputX + -1] != getType && map[inputY + -1][inputX + -1] != 0) {
-                                map[inputY + -1][inputX + -1] = getType;
-                            }
-                            if (map[inputY][inputX + -1] != getType && map[inputY][inputX + -1] != 0) {
-                                map[inputY][inputX + -1] = getType;
-                            }
-                            if (map[inputY + -1][inputX] != getType && map[inputY + -1][inputX] != 0) {
-                                map[inputY + -1][inputX] = getType;
-                            }
-                            if (map[inputY + -1][inputX + 1] != getType && map[inputY + -1][inputX + 1] != 0) {
-                                map[inputY + -1][inputX + 1] = getType;
-                            }
-                            if (map[inputY + 1][inputX + -1] != getType && map[inputY + 1][inputX + -1] != 0) {
-                                map[inputY + 1][inputX + -1] = getType;
-                            }
-                            if ((inputX - moveX == 1 || inputX - moveX == -1) || (inputY - moveY == 1 || inputY - moveY == -1)) {
-                                map[moveY][moveX] = getType;
-                            } else {
-                                map[moveY][moveY] = 0;
-                            }
-                            for (int i = 0; i < map.length; i++) {
-                                for (int j = 0; j < map[0].length; j++) {
-                                    System.out.print(map[i][j]);
-                                }
-                                System.out.println();
                             }
                         }
                     }
-
                 }
             }
+            //Way2: If player can't go anywhere, game over.
+            if(countOfZero == 0) {
+                System.out.println("Way 2");
+                String play = "PLAY";
+                showScores(map, countPlayer1Score, countPlayer2Score);
+                System.out.println("Game over");
+                winner(countPlayer1Score, countPlayer2Score);
+                System.out.println("If you want to start again, type (PLAY) or If you want to end, type anything: ");
+                String restart = sc.next();
+                if(restart.equalsIgnoreCase(play)) {
+                    map = new int[][]{
+                            {1, 0, 0, 0, 0, 0, 0, 2},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {0, 0, 0, 0, 0, 0, 0, 0},
+                            {2, 0, 0, 0, 0, 0, 0, 1}};
+                    printMap(map);
+                    continue;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void printMap(int[][] map) {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                System.out.print(map[i][j] + "  ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static int[][] getMap() {
+        int[][] map = {
+                {1, 0, 0, 0, 0, 2, 2, 2},
+                {0, 0, 0, 0, 0, 2, 2, 2},
+                {0, 0, 0, 0, 0, 2, 2, 2},
+                {2, 2, 2, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0},
+                {2, 0, 0, 0, 0, 0, 0, 2}
+        };
+        return map;
+    }
+
+    public static int getCellDiff(int inputX, int inputY, int outputX, int outputY) {
+        int diff1;
+        int diff2;
+        if(outputX - inputX >= 0) {
+            diff1 = outputX - inputX;
+        } else {
+            diff1 = -1 * (outputX - inputX);
+        }
+        if(outputY - inputY >= 0) {
+            diff2 = outputY - inputY;
+        } else {
+            diff2 = -1 * (outputY - inputY);
+        }
+        if(diff1 > diff2) {
+            return diff1;
+        } else {
+            return diff2;
+        }
+    }
+
+    public static int playerTurn(int turn) {
+        if(turn % 2 == 1) {
+            return 1;
+        } else {
+            return 2;
+        }
+    }
+
+    public static void showScores(int[][]map, int countPlayer1Score, int countPlayer2Score) {
+        for(int i = 0; i < map.length; i++) {
+            for(int j = 0; j < map[i].length; j++) {
+                if(map[j][i] == 1) {
+                    countPlayer1Score++;
+                } else if (map[j][i] == 2) {
+                    countPlayer2Score++;
+                }
+            }
+        }
+        System.out.println("Score " + countPlayer1Score + " vs " + countPlayer2Score);
+    }
+    public static void winner(int countPlayer1Score, int countPlayer2Score) {
+        if(countPlayer1Score > countPlayer2Score) {
+            System.out.println("Player1 win");
+        } else {
+            System.out.println("player2 win");
         }
     }
 }
