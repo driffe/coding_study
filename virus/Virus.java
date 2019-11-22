@@ -22,7 +22,7 @@ public class Virus {
             int inputY = sc.nextInt();
 
             // Determine player's turn.
-            if(map[inputY][inputX] != playerTurn(turn)) {
+            if (map[inputY][inputX] != playerTurn(turn)) {
                 System.out.println("It's not your turn");
                 continue;
             }
@@ -32,142 +32,90 @@ public class Virus {
                 System.out.println("Pick a valid cell!");
                 continue;
             }
-            int countMove = 0;
+
             //Show where can move.
-            for (int i = inputX - 2; i <= inputX + 2; i++) {
-                for (int j = inputY - 2; j <= inputY + 2; j++) {
-                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 0) {
-                        map[j][i] = 5;
-                        countMove++;
-                    }
-                }
-            }
+            int countMove = countAndMove(inputX, inputY, map);
+
             //If rock that you choose can't be moved, go back.
-            if(countMove == 0) {
+            if (countMove == 0) {
                 System.out.println("You can't move this rock! Choose the other rock");
                 continue;
             }
             printMap(map);
 
             // Erase 5
-            for (int i = inputX - 2; i <= inputX + 2; i++) {
-                for (int j = inputY - 2; j <= inputY + 2; j++) {
-                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 5) {
-                        map[j][i] = 0;
-                    }
-                }
-            }
+            resetMap(inputX, inputY, map);
+            while(true) {
+                // Get destination coordinates of the cell I want to move to.
+                System.out.print("input X which you want to move: ");
+                int outputX = sc.nextInt();
+                System.out.print("input Y which you want to move: ");
+                int outputY = sc.nextInt();
 
-            // Get destination coordinates of the cell I want to move to.
-            System.out.print("input X which you want to move: ");
-            int outputX = sc.nextInt();
-            System.out.print("input Y which you want to move: ");
-            int outputY = sc.nextInt();
-
-            // Cannot move to a cell that is occupied.
-            if (map[outputY][outputX] == 1 || map[outputY][outputX] == 2) {
-                System.out.println("Invalid location!");
-                continue;
-            }
-
-            // Get the distance a cell is moving.
-            int diff = getCellDiff(inputX, inputY, outputX, outputY);
-            if (diff == 1) {
-                map[outputY][outputX] = map[inputY][inputX];
-            } else if (diff == 2) {
-                map[outputY][outputX] = map[inputY][inputX];
-                map[inputY][inputX] = 0;
-            } else {
-                System.out.println("You tried to move too much!");
-                continue;
-            }
-
-            // Infect surrounding cells after moving to the destination coordinates.
-            for (int i = outputX - 1; i <= outputX + 1; i++) {
-                for (int j = outputY - 1; j <= outputY + 1; j++) {
-                    if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] != 0) {
-                        map[j][i] = map[outputY][outputX];
-                    }
-                }
-            }
-            turn++;
-            printMap(map);
-            //Count the number of current player's rock.
-            int count = 0;
-            for(int i = 0; i < map.length; i++) {
-                for(int j = 0; j < map[i].length; j++) {
-                    if(map[j][i] == playerTurn(turn)) {
-                        count++;
-                    }
-                }
-            }
-            //Way1: If there is no rock to move, game over.
-            if(count == 0) {
-                System.out.println("Way 1");
-                String play = "PLAY";
-                showScores(map, countPlayer1Score, countPlayer2Score);
-                System.out.println("Game over");
-                winner(countPlayer1Score, countPlayer2Score);
-                System.out.println("If you want to start again, type (PLAY) or If you want to end, type anything: ");
-                String restart = sc.next();
-                if(restart.equalsIgnoreCase(play)) {
-                    map = new int[][]{
-                            {1, 0, 0, 0, 0, 0, 0, 2},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {2, 0, 0, 0, 0, 0, 0, 1}};
+                if(map[outputY][outputX] == playerTurn(turn)) {
+                    inputX = outputX;
+                    inputY = outputY;
+                    countAndMove(inputX, inputY, map);
                     printMap(map);
+                    resetMap(inputX, inputY, map);
                     continue;
-                } else {
-                    break;
                 }
-            }
-            int countOfZero = 0;
-            //Find the way the player can go.
-            for(int i = 0; i < map.length; i++) {
-                for(int j = 0; j < map[i].length; j++) {
-                    if(map[j][i] == playerTurn(turn)) {
-                        for (int k = i - 2; k <= i + 2; k++) {
-                            for (int l = j - 2; l <= j + 2; l++) {
-                                if (k >= 0 && l >= 0 && k < map.length && l < map.length) {
-                                    if(map[l][k] == 0) {
-                                        countOfZero++;
-                                    }
-                                }
-                            }
-                        }
+
+                // Cannot move to a cell that is occupied.
+                if (playerTurn(turn) == 1 && map[outputY][outputX] == 2) {
+                    System.out.println("Invalid location!");
+                    continue;
+                } else if(playerTurn(turn) == 2 && map[outputY][outputX] == 1) {
+                    System.out.println("Invalid location!");
+                    continue;
+                }
+
+                // Get the distance a cell is moving.
+                int diff = getCellDiff(inputX, inputY, outputX, outputY);
+                if (diff == 1) {
+                    map[outputY][outputX] = map[inputY][inputX];
+                } else if (diff == 2) {
+                    map[outputY][outputX] = map[inputY][inputX];
+                    map[inputY][inputX] = 0;
+                } else {
+                    System.out.println("You tried to move too much!");
+                    continue;
+                }
+
+                // Infect surrounding cells after moving to the destination coordinates.
+                infect(outputX, outputY, map);
+
+                turn++;
+                printMap(map);
+
+                //Find the way the player can go.
+                int countOfZero = findGameover(turn, map);
+
+                //Game over: If player can't go anywhere, game over.
+                if(countOfZero == 0) {
+                    String play = "PLAY";
+                    showScores(map, countPlayer1Score, countPlayer2Score);
+                    winner(countPlayer1Score, countPlayer2Score);
+                    endingMessage();
+                    String restart = sc.next();
+                    if(restart.equalsIgnoreCase(play)) {
+                        map = new int[][]{
+                                {1, 0, 0, 0, 0, 0, 0, 2},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {0, 0, 0, 0, 0, 0, 0, 0},
+                                {2, 0, 0, 0, 0, 0, 0, 1}};
+                        turn = 1;
+                        printMap(map);
+                    } else {
+                        break;
                     }
                 }
             }
-            //Way2: If player can't go anywhere, game over.
-            if(countOfZero == 0) {
-                System.out.println("Way 2");
-                String play = "PLAY";
-                showScores(map, countPlayer1Score, countPlayer2Score);
-                System.out.println("Game over");
-                winner(countPlayer1Score, countPlayer2Score);
-                System.out.println("If you want to start again, type (PLAY) or If you want to end, type anything: ");
-                String restart = sc.next();
-                if(restart.equalsIgnoreCase(play)) {
-                    map = new int[][]{
-                            {1, 0, 0, 0, 0, 0, 0, 2},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0, 0},
-                            {2, 0, 0, 0, 0, 0, 0, 1}};
-                    printMap(map);
-                    continue;
-                } else {
-                    break;
-                }
-            }
+
         }
     }
 
@@ -185,7 +133,7 @@ public class Virus {
                 {1, 0, 0, 0, 0, 2, 2, 2},
                 {0, 0, 0, 0, 0, 2, 2, 2},
                 {0, 0, 0, 0, 0, 2, 2, 2},
-                {2, 2, 2, 0, 0, 0, 0, 0},
+                {1, 0, 2, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0},
                 {0, 0, 0, 0, 0, 0, 0, 0},
@@ -240,5 +188,60 @@ public class Virus {
         } else {
             System.out.println("player2 win");
         }
+    }
+    public static int countAndMove(int inputX, int inputY, int[][] map) {
+        int countMove = 0;
+        for (int i = inputX - 2; i <= inputX + 2; i++) {
+            for (int j = inputY - 2; j <= inputY + 2; j++) {
+                if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 0) {
+                    map[j][i] = 5;
+                    countMove++;
+                }
+            }
+        }
+        return countMove;
+    }
+    public static int[][] resetMap(int inputX, int inputY, int[][] map) {
+        for (int i = inputX - 2; i <= inputX + 2; i++) {
+            for (int j = inputY - 2; j <= inputY + 2; j++) {
+                if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] == 5) {
+                    map[j][i] = 0;
+                }
+            }
+        }
+        return map;
+    }
+    public static int[][] infect(int outputX, int outputY, int[][] map) {
+        for (int i = outputX - 1; i <= outputX + 1; i++) {
+            for (int j = outputY - 1; j <= outputY + 1; j++) {
+                if (i >= 0 && j >= 0 && i < map.length && j < map.length && map[j][i] != 0) {
+                    map[j][i] = map[outputY][outputX];
+                }
+            }
+        }
+        return map;
+    }
+    public static int findGameover(int turn, int[][] map) {
+        int countOfZero = 0;
+        //Find the way the player can go.
+        for(int i = 0; i < map.length; i++) {
+            for(int j = 0; j < map[i].length; j++) {
+                if(map[j][i] == playerTurn(turn)) {
+                    for (int k = i - 2; k <= i + 2; k++) {
+                        for (int l = j - 2; l <= j + 2; l++) {
+                            if (k >= 0 && l >= 0 && k < map.length && l < map.length) {
+                                if(map[l][k] == 0) {
+                                    countOfZero++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return countOfZero;
+    }
+    public static void endingMessage() {
+        System.out.println("Game over \n \"If you want to start again, type (PLAY) or If you want to end, type anything: \"");
     }
 }
