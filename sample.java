@@ -1,55 +1,49 @@
+
 import java.util.Scanner;
 
 public class sample {
     public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-        int n = input.nextInt();
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter the row: ");
+        int row = sc.nextInt();
 
-        int[] array = new int[n];
-        for (int i = 0; i < n; i++) {
-            int element = input.nextInt();
-            array[i] = element;
-        }
+        System.out.print("Enter the column: ");
+        int column = sc.nextInt();
 
-        System.out.println(solution(array));
-        print(array);
-    }
-    public static int solution(int[] array) {
-        for (int i = array.length - 1; i >= 0; i--) {
-            boolean swapped = false;
-            for (int j = 0; j < i; j++) {
-                if (array[j] > array[j + 1]) {
-                    int temp = array[j];
-                    array[j] = array[j + 1];
-                    array[j + 1] = temp;
-                    swapped = true;
+        int arr[][] = new int[row][column];
+        int num = 1;
+        int flag = 1;
+        int i = 0;
+        int j = 0;
+        while (i < arr.length) {
+            while (j < arr[i].length) {
+                arr[i][j] = num;
+                num++;
+                if (j == arr[i].length - 1) {
+                    j = arr[i].length - 1;
+                    break;
                 }
+                j++;
             }
-            if (swapped == false) {
-                break;
+            i++;
+        }
+        i--;
+        System.out.println(i + "," + j);
+        while(i >= 0) {
+            while(j >= 0) {
+                arr[i][j] = num;
+                num++;
+                j--;
             }
+            i--;
         }
 
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] == array[i - 1]) {
-                array[i]++;
-            } else if (array[i] < array[i - 1]) {
-                array[i] = array[i - 1] + 1;
+        System.out.println("Flag: " + flag);
+        for (int l = 0; l < arr.length; l++) {
+            for (int k = 0; k < arr[l].length; k++) {
+                System.out.println((l + 1) + "," + (k + 1) + "=" + arr[l][k]);
             }
-        }
 
-        int sum = 0;
-        for (int i = 0; i < array.length; i++) {
-            sum = sum + array[i];
-        }
-        return sum;
-    }
-
-
-
-    public static void print(int[] array) {
-        for (int i = 0; i < array.length; i++) {
-            System.out.println(array[i]);
         }
     }
 }
