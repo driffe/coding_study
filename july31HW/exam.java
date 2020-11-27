@@ -11,25 +11,25 @@ public class exam {
 // output : false
 
         Scanner s = new Scanner(System.in);
-        System.out.println("put a five digit or alphabet : ");
+        System.out.println("PUT A FIVE DIGIT OR ALPHABET : ");
         String input = s.nextLine();
 
-        String [] Arry = {"0123456789"};
+        String [] arry = {"0123456789"};
 
-        boolean isTrue = false;
+        boolean istrue = false;
         for (int i = 0; i < input.length() ; i++) {
-            isTrue = false;
-            for (int j = 0; j < Arry[0].length(); j++) {
-                if (input.charAt(i) == Arry[0].charAt(j)) {
-                    isTrue = true;
+            istrue = false;
+            for (int j = 0; j < arry[0].length(); j++) {
+                if (input.charAt(i) == arry[0].charAt(j)) {
+                    istrue = true;
                     break;
                 }
             }
-            if(!isTrue) {
+            if(!istrue) {
                 break;
             }
         }
-        System.out.print(isTrue);
+        System.out.print(istrue);
     }
 
 }
